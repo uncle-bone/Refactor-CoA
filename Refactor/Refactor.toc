@@ -1,0 +1,20 @@
+﻿## Interface: 30300
+## Title: Refactor
+## Notes: Quality-of-life tweaks for Ascension: quest automation, fast loot, merchant automation, tooltip tweaks, loot toasts, a center-screen crowd-control alert and opt-in transmog auto-collection. Gear comparison now lives in the separate Refactor Gear addon.
+## Author: ProfetGit
+## Version: 1.0.0
+## SavedVariables: RefactorCompareDB
+
+modules\core.lua
+modules\transmog.lua
+modules\merchant.lua
+modules\tooltip.lua
+modules\loot.lua
+modules\quest.lua
+modules\social.lua
+modules\errors.lua
+modules\bag_upgrade.lua
+modules\version_check.lua
+RefactorToast.lua
+RefactorCC.lua
+RefactorUI.lua

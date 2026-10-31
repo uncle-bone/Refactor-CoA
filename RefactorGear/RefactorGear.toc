@@ -1,0 +1,18 @@
+﻿## Interface: 30300
+## Title: Refactor Gear
+## Notes: Weighted-stat gear comparison for Ascension — tooltip verdicts, green bag arrows and loot upgrade alerts. Gear compare only, no other tweaks.
+## Author: ProfetGit
+## Version: 1.0.0
+## SavedVariables: RefactorGearDB
+
+Compare\01_profiles.lua
+Compare\02_classspec.lua
+Compare\03_scan.lua
+Compare\04_score.lua
+Compare\05_tooltip.lua
+Compare\06_bagicons.lua
+Compare\07_questroll.lua
+Compare\08_merchant.lua
+Compare\09_lootalert.lua
+Compare\10_config.lua
+RefactorGearUI.lua

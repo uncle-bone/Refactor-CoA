@@ -1,0 +1,9 @@
+{
+  "version": "v1.0.0",
+  "prerelease": true,
+  "folders": [
+    "Refactor",
+    "RefactorGear"
+  ],
+  "extras": []
+}
