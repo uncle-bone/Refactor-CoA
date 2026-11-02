@@ -10,19 +10,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Package and publish
+      - name: Validate, package and publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
-          import json,pathlib,zipfile,os
-          cfg=json.loads(pathlib.Path('.release.json').read_text())
-          asset=pathlib.Path(os.environ['GITHUB_REPOSITORY'].split('/')[-1]+'-'+cfg['version']+'.zip')
-          with zipfile.ZipFile(asset,'w',zipfile.ZIP_DEFLATED) as z:
-            for folder in cfg['folders']:
-              for p in sorted(pathlib.Path(folder).rglob('*')):
-                if p.is_file(): z.write(p,p.as_posix())
-          with zipfile.ZipFile(asset) as z: assert z.testzip() is None
+          import json, os, pathlib, re, zipfile
+          cfg = json.loads(pathlib.Path('.release.json').read_text())
+          version = cfg['version']
+          assert re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?', version), version
+          folders = cfg['folders']
+          assert sorted(folders) == ['Refactor', 'RefactorGear']
+          expected = version[1:]
+          for folder in folders:
+              toc = pathlib.Path(folder, folder + '.toc')
+              assert toc.is_file(), toc
+              metadata = toc.read_text(encoding='utf-8-sig')
+              assert re.search(r'^## Version:\s*' + re.escape(expected) + r'\s*$', metadata, re.M), toc
+              for line in metadata.splitlines():
+                  name = line.strip()
+                  if not name or name.startswith('##'):
+                      continue
+                  assert pathlib.Path(folder, name.replace('\\', '/')).is_file(), (toc, name)
+          assert not cfg.get('extras'), 'Unexpected extras need explicit packaging review'
+          asset = pathlib.Path(os.environ['GITHUB_REPOSITORY'].split('/')[-1] + '-' + version + '.zip')
+          with zipfile.ZipFile(asset, 'w', zipfile.ZIP_DEFLATED) as archive:
+              for folder in folders:
+                  for path in sorted(pathlib.Path(folder).rglob('*')):
+                      if path.is_file():
+                          archive.write(path, path.as_posix())
+          with zipfile.ZipFile(asset) as archive:
+              assert archive.testzip() is None
+              names = archive.namelist()
+              assert any(x.startswith('Refactor/') for x in names)
+              assert any(x.startswith('RefactorGear/') for x in names)
+              assert all(x.split('/')[0] in folders for x in names)
+          print('Validated TOCs, load paths, version, ZIP structure and CRC:', asset)
           PY
           VERSION=$(python3 -c "import json;print(json.load(open('.release.json'))['version'])")
-          gh release create "$VERSION" "${GITHUB_REPOSITORY##*/}-$VERSION.zip" --target "$GITHUB_SHA" --title "Refactor-CoA $VERSION" --prerelease --notes-file RELEASE-NOTES.md
+          PRERELEASE=$(python3 -c "import json;print('true' if json.load(open('.release.json')).get('prerelease', True) else 'false')")
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists; refusing to overwrite an existing release."
+            exit 1
+          fi
+          if [ "$PRERELEASE" = true ]; then
+            gh release create "$VERSION" "${GITHUB_REPOSITORY##*/}-$VERSION.zip" --target "$GITHUB_SHA" --title "Refactor-CoA $VERSION" --prerelease --notes-file RELEASE-NOTES.md
+          else
+            gh release create "$VERSION" "${GITHUB_REPOSITORY##*/}-$VERSION.zip" --target "$GITHUB_SHA" --title "Refactor-CoA $VERSION" --notes-file RELEASE-NOTES.md
+          fi
