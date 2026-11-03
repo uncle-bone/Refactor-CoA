@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Lua 5.1 syntax and research regression smoke tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1
+          find Refactor RefactorGear -type f -name '*.lua' -print0 | xargs -0 -n1 luac5.1 -p
+          lua5.1 tests/research-verdicts.lua
       - name: Validate, package and publish
         env:
           GH_TOKEN: ${{ github.token }}
