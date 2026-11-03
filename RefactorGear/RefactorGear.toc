@@ -1,8 +1,9 @@
 ﻿## Interface: 30300
 ## Title: Refactor Gear
 ## Notes: Weighted-stat gear comparison for Ascension — tooltip verdicts, green bag arrows and loot upgrade alerts. Gear compare only, no other tweaks.
-## Author: ProfetGit
-## Version: 1.0.3
+## Author: ProfetGit (original); Uncle Bone (maintainer)
+## X-Website: https://github.com/uncle-bone/Refactor-CoA
+## Version: 1.0.4
 ## SavedVariables: RefactorGearDB
 
 Compare\01_profiles.lua
