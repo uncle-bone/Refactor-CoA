@@ -1,9 +1,9 @@
-# Refactor-CoA v1.0.2 — UI hotfix prerelease
+# Refactor-CoA v1.0.3 hotfix
 
-- Fix nil-function errors in research dropdowns by exporting research selection APIs through RefactorGearShared.
-- Restore primary and secondary research menu loading, checkbox refresh, and source switching.
-- Preserve historical BisBeard research data, existing profiles and SavedVariables.
-- Original remains default for existing characters.
-- This build requires in-game Lua 5.1 testing; no claim of verified live mechanics.
+- UI now resolves research API directly from the research module when shared exports are missing.
+- Missing research module shows a clear warning rather than crashing all settings.
+- Fix research dropdown refresh and source selection nil-function failures.
+- Update both addon TOC versions to 1.0.3; the in-game footer uses the installed TOC version.
+- Historical research weights are experimental and not live verified.
 
-Maintainer: Uncle Bone — https://github.com/uncle-bone
+**Installation:** Exit WoW completely. Delete only `Interface/AddOns/Refactor` and `Interface/AddOns/RefactorGear` (NOT WTF or SavedVariables). Extract both new folders from the ZIP. Restart WoW; the footer must show v1.0.3.
