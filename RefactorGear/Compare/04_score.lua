@@ -137,37 +137,23 @@ end
 local function ScoreEquipped(slot, profile)
     local link = GetInventoryItemLink("player", slot)
     if not link then return nil end
-    local secondary = profile ~= nil
     profile = profile or ActiveProfile()
-    -- Memoized per generation: equipped gear only changes on events that
-    -- bump the generation (equip, level, weight/profile edits), so one
-    -- score serves every bag slot of a whole redraw — and every hover in
-    -- between — instead of re-rendering the worn item's tooltip each time.
+    -- Cache by *profile identity*, not a boolean secondary flag. Research
+    -- primary and secondary can both pass explicit but DIFFERENT profiles.
+    -- Reusing the old score2 slot corrupted the second verdict with the
+    -- first profile's weights. ResearchProfile now provides stable tables.
     local c = equippedCache[slot]
-    local memoHit = c and c.gen == C.generation and c.link == link
-    if memoHit then
-        if not secondary and c.score then
-            return c.score, c.dpsScore, c.hitAmt
-        elseif secondary and c.score2 then
-            return c.score2, c.dpsScore2, c.hitAmt2
-        end
-        -- This profile's half isn't memoized yet: fall through and score it.
+    if not c or c.gen ~= C.generation or c.link ~= link then
+        c = {gen = C.generation, link = link, byProfile = {}}
+        equippedCache[slot] = c
+    end
+    local previous = c.byProfile[profile]
+    if previous then
+        return previous.score, previous.dpsScore, previous.hit
     end
     local info = ScoreItem(link, nil, nil, slot, nil, profile)
-    if not info then return false end -- unreadable: retry next call, never memoized
-    if memoHit then
-        if secondary then
-            c.score2, c.dpsScore2, c.hitAmt2 = info.score, info.dpsScore, info.hit
-        else
-            c.score, c.dpsScore, c.hitAmt = info.score, info.dpsScore, info.hit
-        end
-    elseif secondary then
-        equippedCache[slot] = { gen = C.generation, link = link,
-            score2 = info.score, dpsScore2 = info.dpsScore, hitAmt2 = info.hit }
-    else
-        equippedCache[slot] = { gen = C.generation, link = link,
-            score = info.score, dpsScore = info.dpsScore, hitAmt = info.hit }
-    end
+    if not info then return false end -- never cache unreadable gear
+    c.byProfile[profile] = {score=info.score, dpsScore=info.dpsScore, hit=info.hit}
     return info.score, info.dpsScore, info.hit
 end
 
@@ -453,6 +439,10 @@ end
 -- (Wrapped by CompareItem below, which memoizes bag-slot results.)
 local function CompareItemUncached(link, bag, slot, invSlot, src)
     local primaryResearch = C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("primary")
+    -- A research source with no selected profile must never silently fall
+    -- back to the original weights. The UI prompts the user to choose.
+    if C.ResearchSourceActive and C.ResearchSourceActive("primary")
+        and not primaryResearch then return nil end
     local info = ScoreItem(link, bag, slot, invSlot, src, primaryResearch)
     if not info then return nil end
     if info.quality < (RefactorGearDB.minQuality or 0) then return nil end
@@ -510,7 +500,14 @@ local function CompareItem(link, bag, slot, invSlot, src)
         -- a missing .secondary half means its equipped side wasn't readable
         -- yet — caching that would pin the verdict half-drawn until the
         -- next generation bump instead of retrying like a nil result does.
-        if result and (result.secondary or not ((C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and (C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("secondary")) or (not (C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and SecondaryProfile()))) then
+        local secondaryConfigured
+        if C.ResearchSourceActive and C.ResearchSourceActive("secondary") then
+            secondaryConfigured = C.GetResearchVerdictProfile
+                and C.GetResearchVerdictProfile("secondary")
+        else
+            secondaryConfigured = SecondaryProfile()
+        end
+        if result and (result.secondary or not secondaryConfigured) then
             verdictCache[key] = { gen = C.generation, result = result }
         end
         return result
