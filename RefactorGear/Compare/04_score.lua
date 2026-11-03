@@ -479,7 +479,8 @@ local function CompareItemUncached(link, bag, slot, invSlot, src)
     -- ScanItem is weight-independent and cached, so this costs one
     -- re-scoring, not one re-scan.
     local secondaryResearch = C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("secondary")
-    local secondary = (C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and secondaryResearch or SecondaryProfile()
+    local secondary = SecondaryProfile()
+    if C.ResearchSourceActive and C.ResearchSourceActive("secondary") then secondary = secondaryResearch end
     if secondary then
         local info2 = ScoreItem(link, bag, slot, invSlot, src, secondary)
         if info2 then
@@ -509,7 +510,7 @@ local function CompareItem(link, bag, slot, invSlot, src)
         -- a missing .secondary half means its equipped side wasn't readable
         -- yet — caching that would pin the verdict half-drawn until the
         -- next generation bump instead of retrying like a nil result does.
-        if result and (result.secondary or not ((C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and (C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("secondary")) or SecondaryProfile())) then
+        if result and (result.secondary or not ((C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and (C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("secondary")) or (not (C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and SecondaryProfile()))) then
             verdictCache[key] = { gen = C.generation, result = result }
         end
         return result
