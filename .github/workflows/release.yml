@@ -73,7 +73,18 @@ jobs:
           VERSION=$(python3 -c "import json;print(json.load(open('.release.json'))['version'])")
           PRERELEASE=$(python3 -c "import json;print('true' if json.load(open('.release.json')).get('prerelease', True) else 'false')")
           if gh release view "$VERSION" >/dev/null 2>&1; then
-            echo "Release $VERSION already exists; refusing to overwrite an existing release."
+            if [ "$PRERELEASE" = false ]; then
+              # Stable promotion must keep the exact already-tested release
+              # artifact. Refuse to promote if its asset is missing or empty.
+              ASSET="${GITHUB_REPOSITORY##*/}-$VERSION.zip"
+              gh release view "$VERSION" --json assets --jq '.assets[] | select(.name == "'"$ASSET"'") | .size' > /tmp/release-asset-sizes
+              test -s /tmp/release-asset-sizes
+              awk '{if ($1 <= 0) exit 1}' /tmp/release-asset-sizes
+              gh release edit "$VERSION" --latest --prerelease=false --notes-file RELEASE-NOTES.md --title "Refactor-CoA $VERSION"
+              echo "Promoted existing $VERSION asset to stable; ZIP unchanged."
+              exit 0
+            fi
+            echo "Release $VERSION already exists; refusing to overwrite an existing prerelease."
             exit 1
           fi
           if [ "$PRERELEASE" = true ]; then
