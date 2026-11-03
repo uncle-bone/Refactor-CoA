@@ -46,7 +46,7 @@ local function CS()
     local internal = RefactorGearInternal
     if shared and internal then
         for _, name in ipairs({
-            "GetResearchVerdictNames", "GetResearchVerdictName",
+            "GetResearchVerdictNames", "GetResearchVerdictName", "GetResearchVerdictProfile",
             "GetResearchVerdictSource", "SetResearchVerdictSource",
             "SetResearchVerdictProfile",
         }) do
@@ -1167,7 +1167,9 @@ local function BuildWeightsPage()
         local api = CS()
         if not api or type(api.GetResearchVerdictNames) ~= "function"
             or type(api.GetResearchVerdictSource) ~= "function"
-            or type(api.SetResearchVerdictSource) ~= "function" then
+            or type(api.SetResearchVerdictSource) ~= "function"
+            or type(api.GetResearchVerdictName) ~= "function"
+            or type(api.SetResearchVerdictProfile) ~= "function" then
             local warning = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             warning:SetPoint("TOPLEFT", 221, atY)
             warning:SetText("|cffff5555Research module missing - reinstall both addon folders|r")
@@ -1331,8 +1333,7 @@ local function BuildWeightsPage()
     -- and bag arrows both. Per-character, manual-only (auto-selection never
     -- picks one), "None" turns it off.
     y = Section(child, "Secondary verdict", 0, y, INNER_W)
-    SmallText(child, "Show a second profile's verdict in blue next to the active " ..
-        "profile's — for gearing two roles at the same time.", 0, y, INNER_W)
+    SmallText(child, "Choose an independent blue verdict. The stat grid below displays primary weights.", 0, y, INNER_W)
     y = y - 30
 
     local secDD = MakeDropdown(child, 155)
@@ -1613,6 +1614,39 @@ local function BuildWeightsPage()
         "Discards your edits and restores this spec's default weights. Only works on " ..
         "a class-spec profile, not a custom saved profile.")
 
+    -- The stat grid shows the weights feeding the selected PRIMARY verdict.
+    -- Historical research weights are read-only; original edits are preserved.
+    local function ShowingResearch()
+        return shared.GetResearchVerdictSource
+            and shared.GetResearchVerdictSource("primary") == "research"
+    end
+    local function ShownWeights()
+        if ShowingResearch() then
+            local research = shared.GetResearchVerdictProfile
+                and shared.GetResearchVerdictProfile("primary")
+            return research and research.weights or {}
+        end
+        return shared.Weights()
+    end
+    local sourceInfo = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sourceInfo:SetPoint("TOPLEFT", 0, y - 5)
+    sourceInfo:SetWidth(INNER_W)
+    sourceInfo:SetJustifyH("LEFT")
+    sourceInfo.Refresh = function(self)
+        if ShowingResearch() then
+            local name = shared.GetResearchVerdictName("primary")
+            self:SetText(name and ("BisBeard research: " .. name .. " (read-only)")
+                or "Choose a research specialization above to see its stat weights.")
+        else
+            self:SetText("Original primary weights (editable); secondary is independently scored.")
+        end
+    end
+    p:Track(sourceInfo)
+    y = y - 24
+    resetBtn.Refresh = function(self)
+        if ShowingResearch() then self:Disable() else self:Enable() end
+    end
+
     local ROWS = 11
     for i, s in ipairs(shared.STATS) do
         local col = math.floor((i - 1) / ROWS)
@@ -1625,7 +1659,7 @@ local function BuildWeightsPage()
         label:SetText(s.label)
         label.Refresh = function(self)
             -- Grey out ignored stats so what feeds the score reads at a glance.
-            local w = shared.Weights()[s.key]
+            local w = ShownWeights()[s.key]
             if not w or w == 0 then
                 self:SetTextColor(0.45, 0.45, 0.50)
             else
@@ -1635,12 +1669,22 @@ local function BuildWeightsPage()
         p:Track(label)
 
         local eb = MakeEdit(child, 52,
-            function() return shared.Weights()[s.key] end,
+            function() return ShownWeights()[s.key] end,
             function(v)
+                -- Research data is read-only; never alter original weights.
+                if ShowingResearch() then return end
                 shared.Weights()[s.key] = v
                 RefreshBags()
                 label:Refresh()
             end)
+        local refreshEdit = eb.Refresh
+        eb.Refresh = function(self)
+            refreshEdit(self)
+            self:EnableMouse(not ShowingResearch())
+            self:SetTextColor(ShowingResearch() and 0.65 or 1,
+                ShowingResearch() and 0.75 or 1,
+                ShowingResearch() and 0.85 or 1)
+        end
         eb:SetPoint("TOPLEFT", x + 150, ry)
         Explain(eb, s.label, (s.tip or "") .. "\n\n|cff9999990 = ignore this stat.|r")
         p:Track(eb)
