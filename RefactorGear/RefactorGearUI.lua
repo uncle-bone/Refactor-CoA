@@ -1143,6 +1143,56 @@ local function BuildWeightsPage()
     local shared = CS()
     local y = 0
 
+    -- Two independent verdict rows; each source pair is exclusive.
+    local function AddResearchChoice(which, originalDD, atY)
+        local researchDD = MakeDropdown(child, 155)
+        researchDD:SetPoint("TOPLEFT", 221, atY)
+        researchDD.itemsFn = function()
+            local names = CS().GetResearchVerdictNames()
+            local selected = CS().GetResearchVerdictName(which)
+            local items = {}
+            if which == "secondary" then
+                tinsert(items, {text="None", checked=(selected == nil),
+                    func=function() CS().SetResearchVerdictProfile(which, nil) end})
+            end
+            for _, name in ipairs(names) do
+                tinsert(items, {text=name, checked=(selected == name),
+                    func=function() CS().SetResearchVerdictProfile(which, name) end})
+            end
+            return items
+        end
+        researchDD.Refresh = function(self)
+            self:SetText(CS().GetResearchVerdictName(which) or (which == "secondary" and "None" or "Choose spec"))
+            self.click.enabled = CS().GetResearchVerdictSource(which) == "research"
+            self:SetAlpha(self.click.enabled and 1 or 0.5)
+        end
+        p:Track(researchDD)
+        local function Check(x, source, label)
+            local check = CreateFrame("CheckButton", nil, child, "UICheckButtonTemplate")
+            check:SetSize(20, 20)
+            check:SetPoint("TOPLEFT", x, atY - 29)
+            local caption = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            caption:SetPoint("LEFT", check, "RIGHT", 0, 0)
+            caption:SetText(label)
+            check:SetScript("OnClick", function()
+                CS().SetResearchVerdictSource(which, source)
+                RefactorGearUI.Refresh()
+            end)
+            check.Refresh = function(self)
+                self:SetChecked(CS().GetResearchVerdictSource(which) == source)
+            end
+            p:Track(check)
+        end
+        Check(0, "original", "Original")
+        Check(221, "research", "BisBeard + Sidekick")
+        local oldRefresh = originalDD.Refresh
+        originalDD.Refresh = function(self)
+            oldRefresh(self)
+            self.click.enabled = CS().GetResearchVerdictSource(which) == "original"
+            self:SetAlpha(self.click.enabled and 1 or 0.5)
+        end
+    end
+
     -- Profile ---------------------------------------------------------------
     -- Profiles ARE stat-weight sets, so they live on this page: a dropdown
     -- to switch, popups to save-as / rename / delete.
@@ -1151,7 +1201,7 @@ local function BuildWeightsPage()
         "Each character remembers which one it picked.", 0, y, INNER_W)
     y = y - 30
 
-    local dd = MakeDropdown(child, 200)
+    local dd = MakeDropdown(child, 155)
     dd:SetPoint("TOPLEFT", 0, y)
     dd.itemsFn = function()
         local d = DB()
@@ -1178,7 +1228,8 @@ local function BuildWeightsPage()
         self:SetText(DB().activeProfile or "")
     end
     p:Track(dd)
-    y = y - 34
+    AddResearchChoice("primary", dd, y)
+    y = y - 57
 
     local saveAsBtn = MakeButton(child, 96, 22, "Save as...", function()
         ShowPopup({
@@ -1254,7 +1305,7 @@ local function BuildWeightsPage()
         "profile's — for gearing two roles at the same time.", 0, y, INNER_W)
     y = y - 30
 
-    local secDD = MakeDropdown(child, 200)
+    local secDD = MakeDropdown(child, 155)
     secDD:SetPoint("TOPLEFT", 0, y)
     secDD.itemsFn = function()
         local d = DB()
@@ -1285,6 +1336,7 @@ local function BuildWeightsPage()
         self:SetText(cur or "None")
     end
     p:Track(secDD)
+    AddResearchChoice("secondary", secDD, y)
     Explain(secDD.click, "Secondary verdict",
         "Picks a second profile whose upgrade verdict appears in blue alongside " ..
         "the active profile's green/red one — on item tooltips (its own line) " ..
@@ -1294,7 +1346,7 @@ local function BuildWeightsPage()
         "wearing. If your two roles use different gearsets, the secondary verdict " ..
         "scores the hovered item against your worn gear through the secondary " ..
         "profile's weights — read it as an estimate in that case.|r")
-    y = y - 38
+    y = y - 60
 
     -- Spec profiles --------------------------------------------------------
     -- One button per spec of the player's class. Gearing role is a choice,
