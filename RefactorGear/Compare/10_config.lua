@@ -125,6 +125,7 @@ end
 -- Public research verdict API consumed by RefactorGearUI.
 -- Research data is loaded in 02_research.lua before this config module.
 RefactorGearShared.GetResearchVerdictNames = C.GetResearchVerdictNames
+RefactorGearShared.GetResearchVerdictProfile = C.GetResearchVerdictProfile
 RefactorGearShared.GetResearchVerdictName = C.GetResearchVerdictName
 RefactorGearShared.GetResearchVerdictSource = C.GetResearchVerdictSource
 RefactorGearShared.SetResearchVerdictSource = C.SetResearchVerdictSource
