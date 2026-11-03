@@ -108,9 +108,15 @@ local function Name(which)
 end
 local function Profile(which)
     if not Active(which) then return nil end
-    local record = C.ResearchWeights[Name(which)]
+    local selected = Name(which)
+    local record = selected and C.ResearchWeights[selected]
     if not record then return nil end
-    return {weights=record.weights, customWeights={}}
+    -- Stable profile identity is vital: equipped-score caches distinguish
+    -- primary and secondary research weight sets by this table reference.
+    if not record.profile then
+        record.profile = {weights=record.weights, customWeights={}}
+    end
+    return record.profile
 end
 local function Invalidate()
     if C.WipeScanCache then C.WipeScanCache() end
@@ -126,7 +132,22 @@ local function SetSource(which, source)
     if source == "research" and not state[which].profile then
         local preferred = which == "primary" and RefactorGearDB.activeProfile
             or (RefactorGearDB.charSecondaryProfile and RefactorGearDB.charSecondaryProfile[C.CharKey()])
-        state[which].profile = (preferred and C.ResearchWeights[preferred] and preferred) or Names()[1]
+        if preferred and C.ResearchWeights[preferred] then
+            state[which].profile = preferred
+        else
+            -- Never silently assign another class's weights. When there is
+            -- no matching original profile, require an explicit spec pick.
+            local className = UnitClass and UnitClass("player")
+            local prefix = className and (className .. " - ")
+            if prefix then
+                for _, candidate in ipairs(Names()) do
+                    if candidate:sub(1, #prefix) == prefix then
+                        state[which].profile = candidate
+                        break
+                    end
+                end
+            end
+        end
     end
     state[which].source = source
     Invalidate()
