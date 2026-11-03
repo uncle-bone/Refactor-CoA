@@ -33,6 +33,23 @@ jobs:
               assert toc.is_file(), toc
               metadata = toc.read_text(encoding='utf-8-sig')
               assert re.search(r'^## Version:\s*' + re.escape(expected) + r'\s*$', metadata, re.M), toc
+              if folder == 'RefactorGear':
+                  toc_entries = [x.strip().replace('\\\\', '/')
+                                 for x in metadata.splitlines()
+                                 if x.strip() and not x.strip().startswith('##')]
+                  for required in ('Compare/01_profiles.lua',
+                                   'Compare/02_research.lua',
+                                   'Compare/04_score.lua',
+                                   'Compare/09_lootalert.lua',
+                                   'Compare/10_config.lua',
+                                   'RefactorGearUI.lua'):
+                      assert required in toc_entries, ('missing ordered module', required)
+                  assert (toc_entries.index('Compare/01_profiles.lua')
+                          < toc_entries.index('Compare/02_research.lua')
+                          < toc_entries.index('Compare/04_score.lua')
+                          < toc_entries.index('Compare/09_lootalert.lua')
+                          < toc_entries.index('Compare/10_config.lua')
+                          < toc_entries.index('RefactorGearUI.lua')), 'Research load order invalid'
               for line in metadata.splitlines():
                   name = line.strip()
                   if not name or name.startswith('##'):
