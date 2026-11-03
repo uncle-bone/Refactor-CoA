@@ -1,6 +1,6 @@
 # Refactor-CoA
 
-> **[Download latest stable v1.0.4](https://github.com/uncle-bone/Refactor-CoA/releases/download/v1.0.4/Refactor-CoA-v1.0.4.zip)** | [All releases](https://github.com/uncle-bone/Refactor-CoA/releases)
+> **[Download Here!](https://coa-research.unclebone.workers.dev/download/Refactor-CoA)** | [All releases](https://github.com/uncle-bone/Refactor-CoA/releases)
 
 Two separate addons for Ascension Conquest of Azeroth / Conquest Reborn (WoW 3.3.5a, Lua 5.1):
 
@@ -12,6 +12,7 @@ Install by extracting **both top-level folders**, `Refactor/` and `RefactorGear/
 ## v1.0.4 stable — research verdicts and stat-weight improvements
 
 On the Stat Weights page, each Primary and Secondary verdict row has exclusive Original and BisBeard + Sidekick source checkboxes and independent profile dropdowns. Original is selected by default. The research source uses historical BisBeard numerical weights, with Sidekick class/spec role context; Sidekick tier rankings are not converted into fabricated numerical weights. Per-character selections do not overwrite saved original profiles. The selected **primary** weight grid displays its source, with research weights read-only; the secondary source scores independently. If the AddOns list or either options panel displays an older version, fully exit WoW and replace both addon folders without touching `WTF`/SavedVariables. GitHub Actions checks Lua 5.1 syntax, research state, TOC load order, and ZIP integrity. This is the maintainer-approved stable release; automated checks do not constitute a live-client compatibility guarantee. See [release notes](RELEASE-NOTES.md).
+**Current stable release: v1.0.4.**
 
 ## Features
 
