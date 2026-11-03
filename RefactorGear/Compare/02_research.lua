@@ -119,8 +119,9 @@ local function Profile(which)
     return record.profile
 end
 local function Invalidate()
-    if C.WipeScanCache then C.WipeScanCache() end
-    if C.WipeInstanceScans then C.WipeInstanceScans() end
+    -- Changing weights does NOT change the item tooltip scan. RefreshOpenBags
+    -- advances the score memo generation and redraws visible arrows without
+    -- wiping the expensive raw tooltip cache or rescanning every item.
     if C.RefreshOpenBags then C.RefreshOpenBags() end
     if C.RefreshConfig then C.RefreshConfig() end
 end
