@@ -76,3 +76,73 @@ C.ResearchWeights = {
   ["Starcaller - Moon Guard"] = { role = "tank", weights = { AGI = 2.147, ARMOR = 0.2, ARP = 0.15, AP = 0.75, BLOCK = 0.75, CRIT = 0.354, DEF = 1.05, DODGE = 0.9, EXP = 0.5, HASTE = 0.35, HIT = 0.5, INT = 0.721, PARRY = 0.9, SP = 1, STA = 1.1, STR = 2.041, DPS = 14 } },
   ["Venomancer - Vizier"] = { role = "healer", weights = { CRIT = 0.5, HASTE = 0.65, SP = 1, INT = 0.4 } },
 }
+
+-- Historical BisBeard numeric weights, cross-referenced with Sidekick roles.
+-- Sidekick tier ratings are NOT numeric stat weights.
+local function ResearchState()
+    if not RefactorGearDB then return nil end
+    RefactorGearDB.charResearchVerdicts = RefactorGearDB.charResearchVerdicts or {}
+    local key = C.CharKey()
+    local state = RefactorGearDB.charResearchVerdicts[key]
+    if not state then
+        state = {primary={source="original"}, secondary={source="original"}}
+        RefactorGearDB.charResearchVerdicts[key] = state
+    end
+    state.primary = state.primary or {source="original"}
+    state.secondary = state.secondary or {source="original"}
+    return state
+end
+local function Active(which)
+    local state = ResearchState()
+    return state and state[which] and state[which].source == "research" or false
+end
+local function Names()
+    local names = {}
+    for name in pairs(C.ResearchWeights) do names[#names+1] = name end
+    table.sort(names)
+    return names
+end
+local function Name(which)
+    local state = ResearchState()
+    return state and state[which] and state[which].profile
+end
+local function Profile(which)
+    if not Active(which) then return nil end
+    local record = C.ResearchWeights[Name(which)]
+    if not record then return nil end
+    return {weights=record.weights, customWeights={}}
+end
+local function Invalidate()
+    if C.WipeScanCache then C.WipeScanCache() end
+    if C.WipeInstanceScans then C.WipeInstanceScans() end
+    if C.RefreshOpenBags then C.RefreshOpenBags() end
+    if C.RefreshConfig then C.RefreshConfig() end
+end
+local function SetSource(which, source)
+    if which ~= "primary" and which ~= "secondary" then return end
+    if source ~= "original" and source ~= "research" then return end
+    local state = ResearchState()
+    if not state then return end
+    if source == "research" and not state[which].profile then
+        local preferred = which == "primary" and RefactorGearDB.activeProfile
+            or (RefactorGearDB.charSecondaryProfile and RefactorGearDB.charSecondaryProfile[C.CharKey()])
+        state[which].profile = (preferred and C.ResearchWeights[preferred] and preferred) or Names()[1]
+    end
+    state[which].source = source
+    Invalidate()
+end
+local function SetProfile(which, name)
+    if which ~= "primary" and which ~= "secondary" then return end
+    if name ~= nil and not C.ResearchWeights[name] then return end
+    local state = ResearchState()
+    if not state then return end
+    state[which].profile = name
+    Invalidate()
+end
+C.ResearchSourceActive = Active
+C.GetResearchVerdictProfile = Profile
+C.GetResearchVerdictName = Name
+C.GetResearchVerdictSource = function(which) return Active(which) and "research" or "original" end
+C.SetResearchVerdictSource = SetSource
+C.SetResearchVerdictProfile = SetProfile
+C.GetResearchVerdictNames = Names
