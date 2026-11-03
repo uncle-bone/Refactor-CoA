@@ -39,7 +39,24 @@ local BORDER_SIZE = 32 -- display size of the -8x DiamondMetal border pieces
 local CENTER_RIGHT = INSET + DETAIL_W + 18
 local CONTENT_W = W_WIDTH - (INSET + SIDEBAR_W + PAD) - CENTER_RIGHT -- 484
 
-local function CS() return RefactorGearShared end
+-- Resolve research API directly from the internal module when an older
+-- config exporter is loaded. Never let a missing optional API crash the UI.
+local function CS()
+    local shared = RefactorGearShared
+    local internal = RefactorGearInternal
+    if shared and internal then
+        for _, name in ipairs({
+            "GetResearchVerdictNames", "GetResearchVerdictName",
+            "GetResearchVerdictSource", "SetResearchVerdictSource",
+            "SetResearchVerdictProfile",
+        }) do
+            if type(shared[name]) ~= "function" and type(internal[name]) == "function" then
+                shared[name] = internal[name]
+            end
+        end
+    end
+    return shared
+end
 local function DB()
     local s = CS()
     return s and s.GetDB and s.GetDB() or nil
@@ -1145,6 +1162,19 @@ local function BuildWeightsPage()
 
     -- Two independent verdict rows; each source pair is exclusive.
     local function AddResearchChoice(which, originalDD, atY)
+        -- Avoid rendering broken controls if an older research module is
+        -- installed. The original dropdown stays fully functional.
+        local api = CS()
+        if not api or type(api.GetResearchVerdictNames) ~= "function"
+            or type(api.GetResearchVerdictSource) ~= "function"
+            or type(api.SetResearchVerdictSource) ~= "function" then
+            local warning = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            warning:SetPoint("TOPLEFT", 221, atY)
+            warning:SetText("|cffff5555Research module missing - reinstall both addon folders|r")
+            warning:SetWidth(240)
+            warning:SetJustifyH("LEFT")
+            return
+        end
         local researchDD = MakeDropdown(child, 155)
         researchDD:SetPoint("TOPLEFT", 221, atY)
         researchDD.itemsFn = function()
