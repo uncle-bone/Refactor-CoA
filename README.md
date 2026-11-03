@@ -9,6 +9,10 @@ Two separate addons for Ascension Conquest of Azeroth / Conquest Reborn (WoW 3.3
 
 Install by extracting **both top-level folders**, `Refactor/` and `RefactorGear/`, directly into `Interface/AddOns/`. Both can be enabled or disabled independently. Existing SavedVariables should be preserved.
 
+## v1.0.1 research-verdict prerelease
+
+On the Stat Weights page, each Primary and Secondary verdict row has exclusive Original and BisBeard + Sidekick source checkboxes and independent profile dropdowns. Original is selected by default. The research source uses historical BisBeard numerical weights, with Sidekick class/spec role context; Sidekick tier rankings are not converted into fabricated numerical weights. Per-character selections do not overwrite saved original profiles. Live-client testing is pending.
+
 ## Research integration policy
 
 [CoA-Research v2.0.1](https://github.com/uncle-bone/CoA-Research/releases/tag/shared-database-v2.0.1) includes historical source extracts and candidate class, spell, and item relationships. These records are **not live-verified gear stat weights, equipment permissions, or crowd-control mechanics**. Refactor uses client-rendered equipped-item tooltips and current player talent tabs rather than importing unverified static relationships. No unverified research candidates have been enabled as gameplay rules.
