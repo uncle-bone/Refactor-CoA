@@ -2,7 +2,7 @@
 ## Title: Refactor Gear
 ## Notes: Weighted-stat gear comparison for Ascension — tooltip verdicts, green bag arrows and loot upgrade alerts. Gear compare only, no other tweaks.
 ## Author: ProfetGit
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: RefactorGearDB
 
 Compare\01_profiles.lua
