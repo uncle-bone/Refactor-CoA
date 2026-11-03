@@ -452,7 +452,8 @@ end
 --             the primary one.
 -- (Wrapped by CompareItem below, which memoizes bag-slot results.)
 local function CompareItemUncached(link, bag, slot, invSlot, src)
-    local info = ScoreItem(link, bag, slot, invSlot, src)
+    local primaryResearch = C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("primary")
+    local info = ScoreItem(link, bag, slot, invSlot, src, primaryResearch)
     if not info then return nil end
     if info.quality < (RefactorGearDB.minQuality or 0) then return nil end
 
@@ -471,13 +472,14 @@ local function CompareItemUncached(link, bag, slot, invSlot, src)
         return { status = "wrongarmor", context = info.itemSubType }
     end
 
-    local result = VerdictForProfile(info)
+    local result = VerdictForProfile(info, primaryResearch)
     if not result then return nil end
 
     -- Secondary (blue) verdict: same tooltip scan, second weighted sum —
     -- ScanItem is weight-independent and cached, so this costs one
     -- re-scoring, not one re-scan.
-    local secondary = SecondaryProfile()
+    local secondaryResearch = C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("secondary")
+    local secondary = (C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and secondaryResearch or SecondaryProfile()
     if secondary then
         local info2 = ScoreItem(link, bag, slot, invSlot, src, secondary)
         if info2 then
@@ -507,7 +509,7 @@ local function CompareItem(link, bag, slot, invSlot, src)
         -- a missing .secondary half means its equipped side wasn't readable
         -- yet — caching that would pin the verdict half-drawn until the
         -- next generation bump instead of retrying like a nil result does.
-        if result and (result.secondary or not SecondaryProfile()) then
+        if result and (result.secondary or not ((C.ResearchSourceActive and C.ResearchSourceActive("secondary")) and (C.GetResearchVerdictProfile and C.GetResearchVerdictProfile("secondary")) or SecondaryProfile())) then
             verdictCache[key] = { gen = C.generation, result = result }
         end
         return result
