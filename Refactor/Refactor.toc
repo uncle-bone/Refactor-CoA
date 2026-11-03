@@ -1,8 +1,9 @@
 ﻿## Interface: 30300
 ## Title: Refactor
 ## Notes: Quality-of-life tweaks for Ascension: quest automation, fast loot, merchant automation, tooltip tweaks, loot toasts, a center-screen crowd-control alert and opt-in transmog auto-collection. Gear comparison now lives in the separate Refactor Gear addon.
-## Author: ProfetGit
-## Version: 1.0.3
+## Author: ProfetGit (original); Uncle Bone (maintainer)
+## X-Website: https://github.com/uncle-bone/Refactor-CoA
+## Version: 1.0.4
 ## SavedVariables: RefactorCompareDB
 
 modules\core.lua
