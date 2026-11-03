@@ -34,7 +34,7 @@ jobs:
               metadata = toc.read_text(encoding='utf-8-sig')
               assert re.search(r'^## Version:\s*' + re.escape(expected) + r'\s*$', metadata, re.M), toc
               if folder == 'RefactorGear':
-                  toc_entries = [x.strip().replace('\\\\', '/')
+                  toc_entries = [x.strip().replace('\\', '/')
                                  for x in metadata.splitlines()
                                  if x.strip() and not x.strip().startswith('##')]
                   for required in ('Compare/01_profiles.lua',
