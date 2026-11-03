@@ -122,6 +122,14 @@ local function SetHitCapCustomRating(rating)
     C.RefreshConfig()
 end
 
+-- Public research verdict API consumed by RefactorGearUI.
+-- Research data is loaded in 02_research.lua before this config module.
+RefactorGearShared.GetResearchVerdictNames = C.GetResearchVerdictNames
+RefactorGearShared.GetResearchVerdictName = C.GetResearchVerdictName
+RefactorGearShared.GetResearchVerdictSource = C.GetResearchVerdictSource
+RefactorGearShared.SetResearchVerdictSource = C.SetResearchVerdictSource
+RefactorGearShared.SetResearchVerdictProfile = C.SetResearchVerdictProfile
+
 RefactorGearShared.SaveProfileAs = SaveProfileAs
 RefactorGearShared.DeleteProfile = DeleteProfile
 RefactorGearShared.SetSecondaryProfile = SetSecondaryProfile
