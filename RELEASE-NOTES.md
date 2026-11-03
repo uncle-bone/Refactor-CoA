@@ -1,4 +1,4 @@
-# Refactor-CoA v1.0.4 — Research verdict regression fixes (prerelease)
+# Refactor-CoA v1.0.4 — Stable release: research verdict regression fixes
 
 Maintainer: **Uncle Bone** — https://github.com/uncle-bone/Refactor-CoA
 
@@ -22,4 +22,4 @@ BisBeard's historical numeric weights are included as reference data. The curren
 4. Restart the client and verify both options panels display `v1.0.4`. Older versions in-game indicate the game is still loading older addon files.
 5. On Refactor Gear → Stat Weights, select Original or BisBeard + Sidekick separately for Primary and Secondary. Scroll down to view the weight grid for the selected **Primary** source. Research values are read-only.
 
-Automated tests do not substitute for live Conquest Reborn testing. This remains a **prerelease**.
+**Stable release approved by the maintainer.** Automated checks passed; in-game results may still depend on the Conquest Reborn client and installed addons.
